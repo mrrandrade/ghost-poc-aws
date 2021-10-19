@@ -1,0 +1,17 @@
+#cloud-config
+repo_update: true
+repo_upgrade: all
+runcmd:
+  - export PATH=$PATH':'/usr/local/bin
+  - apt-get update
+  - apt-get upgrade -y
+  - apt-get install nginx -y
+  - ufw allow 'Nginx Full'
+  - sudo sed -i 's/# server_names_hash_bucket_size 64;/server_names_hash_bucket_size 128;/' /etc/nginx/nginx.conf
+  - curl -sL  'https://deb.nodesource.com/setup_12.x' | sudo -E bash
+  - apt-get install -y nodejs
+  - npm install ghost-cli@latest -g
+  - mkdir -p /var/www/ghost
+  - chown 'ubuntu:' /var/www/ghost
+  - chmod 775 /var/www/ghost
+  - sudo su ubuntu --command "cd /var/www/ghost && ghost install --no-prompt --db 'mysql' --dbhost '${db_host}' --dbuser '${db_user}' --dbpass '${db_password}' --dbname 'ghost' --url ${url} --check-empty false"

@@ -1,0 +1,52 @@
+module "redis" {
+  source = "cloudposse/elasticache-redis/aws"
+  version = "~>0.40.1"
+
+  stage                      = "production"
+  name                       = "ghost"
+  namespace                  = "ghost"  
+
+  vpc_id                     = module.vpc.vpc_id
+  subnets                    = module.vpc.private_subnets
+
+  cluster_size               = 2
+  instance_type              = "cache.t3.micro"
+  apply_immediately          = true
+  automatic_failover_enabled = true
+
+  # TODO: change this.
+  transit_encryption_enabled = false
+  at_rest_encryption_enabled = false  
+  # zone_id                    = var.zone_id  
+  # engine_version             = var.engine_version
+  # family                     = "redis6.0"  
+
+  # TODO: review
+  security_group_rules = [
+    {
+      type                     = "egress"
+      from_port                = 0
+      to_port                  = 65535
+      protocol                 = "-1"
+      cidr_blocks              = ["0.0.0.0/0"]
+      source_security_group_id = null
+      description              = "Allow all outbound traffic"
+    },
+    {
+      type                     = "ingress"
+      from_port                = 0
+      to_port                  = 65535
+      protocol                 = "-1"
+      cidr_blocks              = []
+      source_security_group_id = aws_security_group.ghost.id
+      description              = "Allow all inbound traffic from trusted Security Groups"
+    },
+  ]
+
+  parameter = [
+    {
+      name  = "notify-keyspace-events"
+      value = "lK"
+    }
+  ]
+}
